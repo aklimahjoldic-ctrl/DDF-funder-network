@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How Claude Built This</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+:root {
+  --bg: #fbfbfa; --panel: #ffffff; --fg: #1b1c1e; --muted: #6a6d72; --line: #e3e4e6;
+  --arts: #257de0; --env: #008a17; --child: #f47230; --bad: #c0392b;
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #17181a; --panel: #1f2023; --fg: #ececec; --muted: #9a9ca1; --line: #2e3034;
+  --arts: #338ced; --env: #0aac23; --child: #e76624; --bad: #e0574a; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #17181a; --panel: #1f2023; --fg: #ececec; --muted: #9a9ca1; --line: #2e3034;
+  --arts: #338ced; --env: #0aac23; --child: #e76624; --bad: #e0574a; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.6;
+  padding: 32px max(16px, env(safe-area-inset-left, 0px)) 48px; }
+.wrap { max-width: 760px; margin: 0 auto; }
+a { color: var(--arts); }
+.back { font-size: 13px; color: var(--muted); text-decoration: none; }
+.back:hover { color: var(--fg); }
+h1 { font-family: var(--font-display); font-weight: 600; font-size: 2.6rem; line-height: 1.1; letter-spacing: -0.015em; margin: 18px 0 8px; text-wrap: balance; }
+.lede { color: var(--muted); margin: 0 0 32px; }
+h2 { font-family: var(--font-display); font-weight: 600; font-size: 1.3rem; margin: 40px 0 12px; padding-top: 20px; border-top: 1px solid var(--line); }
+ol.steps { list-style: none; padding: 0; margin: 0; counter-reset: s; }
+ol.steps li { counter-increment: s; position: relative; padding: 0 0 18px 40px; }
+ol.steps li::before { content: counter(s); position: absolute; left: 0; top: 1px; width: 26px; height: 26px; border-radius: 50%;
+  border: 1px solid var(--line); background: var(--panel); font-size: 12px; font-weight: 600; display: grid; place-items: center; color: var(--muted); }
+ol.steps b { font-weight: 600; }
+.k { color: var(--muted); }
+.prompt { display: block; font-size: 13px; color: var(--muted); font-style: italic; margin-top: 2px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 500; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+td.n { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.dots { letter-spacing: 1px; white-space: nowrap; }
+.c4 { color: var(--env); } .c3 { color: var(--fg); } .c2 { color: var(--child); } .c1 { color: var(--bad); }
+.bar { display: inline-block; height: 8px; border-radius: 2px; background: currentColor; vertical-align: middle; margin-right: 6px; }
+.callout { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+ul { padding-left: 20px; } li { margin: 3px 0; }
+.tablewrap { overflow-x: auto; }
+footer { margin-top: 48px; font-size: 13px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">← Back to DDF Funders Network</a>
+  <h1>How Claude built this</h1>
+  <p class="lede">A record of how the DDF Funders Network was made through conversation with Claude, an AI model by Anthropic, for a class assignment on vibe coding. AJ gave directions in plain English; Claude did the research, wrote the code, checked the facts, and published the result. Built 26 Nov 2026.</p>
+
+  <h2>The steps</h2>
+  <ol class="steps">
+    <li><b>Research.</b> Claude searched dorisduke.org and the wider web for programs where several funders pooled money with the Doris Duke Foundation (DDF), starting from AJ's example, Humanity AI.
+      <span class="prompt">"Search the Doris Duke website and the internet to find all the instances of grant programs in which multiple funders pooled funds together."</span></li>
+    <li><b>Spreadsheet.</b> The findings went into an Excel workbook organized by DDF program area, with tabs for pooled programs, a summary by area, aligned efforts that weren't true pools, collaboratives checked where DDF wasn't named, and notes. Built with Python and openpyxl.</li>
+    <li><b>Static network chart.</b> A first spring-layout (force-directed) chart in Python with networkx and matplotlib. Funders are nodes; line width shows the size of the shared pool; funders in the same program are linked with lighter lines so they cluster together.
+      <span class="prompt">"Make the nodes funders, edges the size of the funding, and the layout spring. Keep the style minimalist."</span></li>
+    <li><b>Interactive page.</b> The chart was rebuilt in the browser with D3.js: a live force simulation with a year filter and Play timeline, DDF program filters, dots sized by endowment and colored by program, hover and click details, zoom, and a side panel listing funders and programs.</li>
+    <li><b>Design iterations.</b> About a dozen rounds of feedback shaped the details. Examples: softer hover bolding, a one-time pulse on the DDF node as a "click me" hint, the big year shown during playback, lighter labels for single-program funders, a program dropdown and Reset button, clickable program names, and website links in the funder panel. Each change was checked with automated browser screenshots before publishing.
+      <span class="prompt">"What if users don't discover that nodes are clickable? Can you suggest a hint or affordance?"</span></li>
+    <li><b>Publishing.</b> The page is published as a Claude artifact, pushed to a private GitHub repository, and copied to AJ's Mac.</li>
+    <li><b>Fact-check.</b> AJ asked Claude to make sure everything shown is accurate. Claude re-read every program's primary source, checked 46 funder websites, replaced endowment estimates with IRS Form 990 figures, and fixed what didn't hold up.
+      <span class="prompt">"Make sure you are showing accurate and verified information everywhere here."</span></li>
+    <li><b>Confidence ratings and audit.</b> Every program and endowment got a 1–4 confidence rating, shown in the page's info boxes and the spreadsheet. A separate fresh checker then re-verified a random sample of items rated 4.
+      <span class="prompt">"Evaluate the accuracy of what you have from 1-4. 4 being the highest checked, accurate, verified."</span></li>
+  </ol>
+
+  <h2>Sources and tools</h2>
+  <ul>
+    <li><b>Primary sources:</b> DDF news releases and project pages; partner pages and releases (MacArthur, NEFA, Artist Relief, The New York Community Trust, William T. Grant Foundation, Land Trust Alliance); IRS Form 990 and 990-PF filings through ProPublica Nonprofit Explorer.</li>
+    <li><b>Secondary sources</b> (used only where no primary source was found, and rated 2): Chronicle of Philanthropy, Mongabay, Inside Philanthropy, Wikipedia.</li>
+    <li><b>Code:</b> Python (openpyxl, networkx, matplotlib) for the spreadsheet and static chart; HTML, CSS and D3.js v7 for the interactive page; Playwright for automated screenshot tests; Git and GitHub for version control.</li>
+    <li><b>AI:</b> Claude, working in Claude Code. Claude used web search, web page reading, and helper agents that fetched pages in parallel.</li>
+  </ul>
+
+  <h2>How accurate is it?</h2>
+  <p>Every program and every endowment figure has a confidence rating. Open any funder or program on the network page to see its rating, source link, and a note on what was checked.</p>
+  <div class="callout">
+    <div><span class="dots c4">●●●●</span> <b>4</b>: matches a primary source exactly (the funder's own release or page, or an IRS filing), read on 26 Nov 2026.</div>
+    <div><span class="dots c3">●●●○</span> <b>3</b>: primary source, with a small gap named in the note (a missing end year, a list that says "including", or a figure the source states two ways).</div>
+    <div><span class="dots c2">●●○○</span> <b>2</b>: secondary source, such as a news report or Wikipedia, or an inference.</div>
+    <div><span class="dots c1">●○○○</span> <b>1</b>: unverified.</div>
+  </div>
+  <div class="tablewrap" style="margin-top:16px"><table><thead><tr><th>Ratings</th><th style="text-align:right">4</th><th style="text-align:right">3</th><th style="text-align:right">2</th><th style="text-align:right">1</th><th style="text-align:right">Total</th></tr></thead><tbody><tr><td>Programs</td><td class="n c4">8</td><td class="n c3">4</td><td class="n c2">1</td><td class="n c1">0</td><td class='n'>13</td></tr><tr><td>Endowment figures</td><td class="n c4">21</td><td class="n c3">2</td><td class="n c2">1</td><td class="n c1">0</td><td class='n'>24</td></tr><tr><td>All</td><td class="n c4">29</td><td class="n c3">6</td><td class="n c2">2</td><td class="n c1">0</td><td class='n'>37</td></tr></tbody></table></div><div class="tablewrap" style="margin-top:16px"><table><thead><tr><th>Program</th><th>Rating</th><th>Why</th></tr></thead><tbody><tr><td>Artist Relief</td><td class="dots c4">●●●●</td><td class="k">Artist Relief's About page lists DDF (as Doris Duke Charitable Foundation, its name before 2023) among funders matching Mellon's $5M seed, and gives $25M raised and 13 cycles from Apr 2020 to Jun 2021.</td></tr><tr><td>Collective to Strengthen Pathways for Health Research</td><td class="dots c4">●●●●</td><td class="k">DDF project page names DDF and all 8 partners 'and additional philanthropic partners' as the Collective, and says it held 18 conversations in 2025. No dollar figure is published.</td></tr><tr><td>Fund to Retain Clinical Scientists</td><td class="dots c4">●●●●</td><td class="k">DDF press release (Nov 17, 2021) names all 5 partners and $12.1M to 22 schools. It says $500K per grant in one place and $550K in another; $550K × 22 = $12.1M.</td></tr><tr><td>Humanity AI</td><td class="dots c4">●●●●</td><td class="k">MacArthur press release (Oct 14, 2025) names all 10 partners, including DDF, and the $500M five-year total.</td></tr><tr><td>Institutional Challenge Grants</td><td class="dots c4">●●●●</td><td class="k">W.T. Grant Foundation releases: 2023 round (Jun 2023) with Spencer, DDF and Bezos Family, nearly $2.6M; 2025 round (Jun 30, 2025) with the same partners, $2.6M; 2026 round (May 6, 2026) with Annie E. Casey, Bezos Family, DDF and Spencer, $2.6M. Not every grant in a round is co-funded by DDF.</td></tr><tr><td>Mosaic Network and Fund</td><td class="dots c4">●●●●</td><td class="k">NYCT's Mosaic page: established 2018, 27 donors (all 11 shown here are on its list, plus DDF), activities 'currently on pause' while it prepares to operate independently. Pool size not published.</td></tr><tr><td>National Dance Project</td><td class="dots c4">●●●●</td><td class="k">NEFA's NDP page names DDF and Mellon as lead funders and the Aliad Fund for special initiatives, says DDF has funded it since 1999, and gives the $38.5M total. The final Production Grant cohort was awarded Sept 2026. NEFA says it is evolving its national programs after that cohort, so funders may change.</td></tr><tr><td>Tech Infrastructure Grants</td><td class="dots c4">●●●●</td><td class="k">DDF release (Jul 6, 2026) says DDF announced the grants in partnership with the Ford Foundation, totaling more than $4M over five years. It says 'five grants' but lists six grantees.</td></tr><tr><td>Artists Make Technology</td><td class="dots c3">●●●○</td><td class="k">DDF release (Jan 7, 2026) names Mozilla, Hewlett, DDF and Ford as committing $6.5M toward an $11M three-year goal. MacArthur and Omidyar Network are not in the release; they come from a later Inside Philanthropy report (secondary).</td></tr><tr><td>Land and Climate Program</td><td class="dots c3">●●●○</td><td class="k">Land Trust Alliance release names DDF and the 6 other funders and says more than $1.2M was awarded in the three years since launch. The release is undated, so the launch year is unknown; only DDF's 2024 grant is dated.</td></tr><tr><td>Opt-in for Families</td><td class="dots c3">●●●○</td><td class="k">DDF release (Mar 11, 2024) gives $33M over three years from a coalition 'including' DDF, The Duke Endowment and the Aviv Foundation, so the list may be incomplete. It also says each of 4 sites gets about $9M (about $36M), which doesn't match $33M.</td></tr><tr><td>Performing Artist Recovery Fund</td><td class="dots c3">●●●○</td><td class="k">DDF release (Oct 12, 2021): $3M to 300 artists at $10,000 each, through a fund DDF created at The New York Community Trust. NYCT administers it; the release doesn't say NYCT added its own money, so this may be DDF-only.</td></tr><tr><td>Tribal Nations Conservation Pledge</td><td class="dots c2">●●○○</td><td class="k">DDF release (Mar 21, 2023) confirms $102.5M and DDF's $32M share, but names only Native Americans in Philanthropy, the Biodiversity Funders Group and '14 other philanthropies'. The 14 funder names shown here come from news reports (Chronicle of Philanthropy, Mongabay), not a primary source.</td></tr></tbody></table></div>
+
+  <h3 style="font-family:var(--font-display);font-weight:600;font-size:1.05rem;margin:28px 0 8px">Independent audit</h3>
+  <p>A fresh checker that hadn't seen any of this work re-read the cited source for a random sample of 10 items rated 4: 7 endowment figures and 3 programs (National Dance Project, Artist Relief, and the Collective to Strengthen Pathways for Health Research). It was told to check every number, date and name.</p>
+<p><b>Result: 10 of 10 matched</b>, with no partial matches or mismatches. Four endowment figures match after rounding (for example, $885.7M is shown as $886M). The checker also noted two nuances, which are now in the notes: the Collective's page adds "additional philanthropic partners" beyond the nine named, and NEFA is changing its national programs after the final Production Grant cohort in September 2026.</p>
+
+
+  <h3 style="font-family:var(--font-display);font-weight:600;font-size:1.05rem;margin:28px 0 8px">What the fact-check changed</h3>
+  <ul>
+    <li><b>Endowments:</b> estimates from Wikipedia and memory were replaced with total assets from the latest IRS 990 filings, with the fiscal year shown. Some moved a lot: Ford went from $13.7B to $17.5B, Open Society from $19.6B to $10.8B, and Bloomberg from $4.2B to $12.1B. Open Society and Bloomberg are rated 3 because each 990 covers one main foundation, not the whole network. Stavros Niarchos files no US 990, so its Wikipedia estimate stays and is rated 2.</li>
+    <li><b>Artists Make Technology:</b> DDF's launch release names Mozilla, Hewlett and Ford, not MacArthur or Omidyar Network. Those two come from a later news report, so the program is rated 3. The pool is now shown as an $11M goal with $6.5M committed at launch.</li>
+    <li><b>Tribal Nations Conservation Pledge:</b> DDF's release confirms $102.5M and DDF's own $32M share, but it doesn't name the other 14 funders. Their names come from news reports, so the program is rated 2.</li>
+    <li><b>Fund to Retain Clinical Scientists:</b> the release states the grant size two ways ($500K and $550K). The page now shows $550K, which matches the $12.1M total, and no longer shows a guessed end year.</li>
+    <li><b>Land and Climate Program:</b> the guessed 2021 start was removed, because the source is undated. Only DDF's dated 2024 grant is shown.</li>
+    <li><b>Mosaic Network and Fund:</b> it's now marked as paused, not ended, and all 11 donors shown were confirmed on its donor list.</li>
+    <li><b>Institutional Challenge Grants:</b> Annie E. Casey joined only the 2026 round. The 2023 and 2025 rounds were confirmed from W.T. Grant Foundation releases.</li>
+    <li><b>Performing Artist Recovery Fund:</b> The New York Community Trust ran the fund, but the release doesn't say it added its own money. This is flagged in the note.</li>
+    <li><b>Collective for Health Research:</b> renamed to its official name, the Collective to Strengthen Pathways for Health Research.</li>
+    <li><b>Websites:</b> 45 of 46 links load and go to the right organization. The Howard Gilman Foundation link couldn't be checked, so it was removed.</li>
+  </ul>
+
+
+  <h2>Security and privacy review</h2>
+  <ul>
+    <li><b>Outside code:</b> the page loads exactly two things from outside: D3.js version 7.9.0 from cdnjs.cloudflare.com, pinned to that exact version, and the Inter and Space Grotesk fonts from Google Fonts. Everything else is written inline in the page.</li>
+    <li><b>No data collection:</b> there are no forms, cookies, analytics, trackers, or logins. The page stores nothing in the browser and sends nothing anywhere.</li>
+    <li><b>No secrets:</b> no API keys or credentials appear in the page or the repository. The data is public information from public sources.</li>
+    <li><b>Links:</b> external links open in a new tab with <code>rel="noopener"</code>, so the linked site can't control this page.</li>
+    <li><b>Private by default:</b> the GitHub repository is private, and the artifact is visible only to people AJ shares it with.</li>
+  </ul>
+
+  <h2>Limits</h2>
+  <ul>
+    <li>DDF rarely publishes its own share of a pool, so line widths use each program's total pool, not DDF's contribution. Claude tried to read DDF's own grant payments from its IRS 990-PF grant lists, but the filing viewer couldn't be read automatically, so DDF's share is shown only where a release states it.</li>
+    <li>DDF's online grants database lists 132 grants, but only about 20 could be read automatically, so smaller collaboratives may be missing.</li>
+    <li>Endowments are 990 book values, which can differ from the market values foundations report themselves.</li>
+    <li>The ratings show how well each fact is sourced. They don't guarantee the sources themselves are right.</li>
+  </ul>
+
+  <footer>Made with Claude · 26 Nov 2026 · <a href="index.html">View the network</a></footer>
+</div>
+</body>
+</html>

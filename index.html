@@ -108,6 +108,11 @@ line.hl-co { stroke: var(--spoke); stroke-opacity: 0.35; stroke-width: 1.2px; }
 .side .plink { all: unset; cursor: pointer; font-weight: 600; color: var(--fg); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
 .side .plink:hover, .side .plink:focus-visible { text-decoration-color: var(--fg); }
 .side .webl { margin-left: 8px; }
+.howlink { margin: 0; font-size: 13px; } .howlink a { color: var(--muted); } .howlink a:hover { color: var(--fg); }
+.conf { font-size: 11px; letter-spacing: 0.5px; white-space: nowrap; color: var(--muted); }
+.conf.c4 { color: var(--env); } .conf.c3 { color: var(--fg); } .conf.c2 { color: var(--child); } .conf.c1 { color: #c0392b; }
+.vnote { font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.35; }
+
 .notes p { margin: 0 0 6px; }
 .count { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; margin-left: auto; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -148,11 +153,13 @@ line.hl-co { stroke: var(--spoke); stroke-opacity: 0.35; stroke-width: 1.2px; }
 
   <details class="about notes" id="about">
     <summary>About this data</summary>
-    <p><b>Programs.</b> 13 programs from the research spreadsheet. Colors follow DDF's program names on dorisduke.org (Arts, Environment, Medical Research, Child Well-being, Building Bridges). Humanity AI is not housed in one DDF program, so it is shown as "Other". No pooled program was found for Building Bridges. Gray dots are funders that share programs across more than one DDF program.</p>
-    <p><b>Endowments.</b> Figures marked "sourced" come from Wikipedia's list of wealthiest charitable foundations (rounded estimates, end of 2024). Figures marked "approx." are approximate recent total assets from public reports and were not checked line by line. Funders with no reliable figure (public charities, LLCs, smaller family foundations) are drawn as small dashed rings.</p>
+    <p><b>Programs.</b> 13 programs where DDF and at least one other funder put money into the same fund or grant program. Colors follow DDF's program names on dorisduke.org (Arts, Environment, Medical Research, Child Well-being, Building Bridges). Humanity AI is not housed in one DDF program, so it is shown as "Other". No pooled program was found for Building Bridges. Gray dots are funders that share programs across more than one DDF program. DDF was called the Doris Duke Charitable Foundation before 2023, and older sources use that name.</p>
+    <p><b>Endowments.</b> Dot size shows total assets (end-of-year book value) from each funder's latest IRS Form 990 or 990-PF on ProPublica Nonprofit Explorer, with the fiscal year shown in the info box. Book value can differ from the market value a foundation reports. Funders with no figure (public charities, LLCs, smaller family foundations) are drawn as small dashed rings.</p>
+    <p><b>Confidence (●●●● 4/4).</b> Every program and endowment figure was checked on 26 Nov 2026. 4 means it matches a primary source exactly (the funder's own release or page, or an IRS filing). 3 means a primary source with a small gap, which the note names (for example a missing end year, a list that says "including", or a figure the source states inconsistently). 2 means a secondary source such as Wikipedia or a news report. 1 means unverified.</p>
     <p><b>Line width.</b> DDF rarely publishes its own share, so lines use each program's total pool (log scale). Dashed lines mean the pool size is not published. The Mosaic Fund shows 11 of its 27 donors.</p>
     <p><b>Filled and hollow dots.</b> Each dot represents a funder. A filled dot means a public endowment figure was found, and its size shows that endowment. A hollow dashed dot means no reliable endowment figure was found, so it is drawn at a fixed size.</p>
   </details>
+  <p class="howlink"><a href="how-claude-built-this.html">How Claude built this →</a></p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
@@ -168,31 +175,278 @@ const AREAS = [
 ];
 // [program, DDF program, pool $M or null, years active, partner funders]
 const PROGRAMS = [
-  ["Humanity AI", "Other", 500, [2025,2030], ["Ford","Lumina","Kapor","MacArthur","Mellon","Mozilla","Omidyar Network","Packard","Siegel Family Endowment"]],
-  ["Tribal Nations Conservation Pledge", "Environment", 102.5, [2023,2028], ["Alaska Conservation Fdn","Christensen Fund","Decolonizing Wealth Project","Moore","Grousemont","J.M. Kaplan Fund","Packard","Resources Legacy Fund","Re:wild","Walton Family","Water Foundation","Wilburforce","Hewlett","Wyss"]],
-  ["National Dance Project", "Arts", 38.5, [1999,2026], ["Mellon","Aliad Fund"]],
-  ["Opt-in for Families", "Child Well-being", 33, [2024,2027], ["Duke Endowment","Aviv Foundation"]],
-  ["Artist Relief", "Arts", 25, [2020,2021], ["Mellon","Rauschenberg","Knight","Open Society"]],
-  ["Fund to Retain Clinical Scientists", "Medical Research", 12.1, [2021,2023], ["American Heart Assn","Burroughs Wellcome","Templeton","Rita Allen","Walder"]],
-  ["Artists Make Technology", "Arts", 11, [2026,2028], ["Mozilla","Hewlett","Ford","MacArthur","Omidyar Network"]],
-  ["Institutional Challenge Grants", "Child Well-being", 7.8, [2023,2026], ["W.T. Grant","Spencer","Bezos Family","Annie E. Casey"]],
-  ["Tech Infrastructure Grants", "Arts", 4, [2026,2030], ["Ford"]],
-  ["Performing Artist Recovery Fund", "Arts", 3, [2021,2021], ["NY Community Trust"]],
-  ["Land and Climate Program", "Environment", 1.2, [2021,2026], ["J.M. Kaplan Fund","Jane's Trust","Merck Family Fdn","Oregon Community Fdn","Volgenau","William Penn"]],
-  ["Mosaic Network and Fund", "Arts", null, [2018,2024], ["Mellon","Ford","Bloomberg","Rockefeller Brothers","Surdna","Stavros Niarchos","Jerome","Mertz Gilmore","Altman","Howard Gilman","NY Community Trust"]],
-  ["Collective for Health Research", "Medical Research", null, [2025,2026], ["American Cancer Society","American Heart Assn","Burroughs Wellcome","Dana Foundation","Donaghue","Prebys","Robertson","Susan G. Komen"]],
+  ["Humanity AI", "Other", 500, [2025, 2030], ["Ford", "Lumina", "Kapor", "MacArthur", "Mellon", "Mozilla", "Omidyar Network", "Packard", "Siegel Family Endowment"]],
+  ["Tribal Nations Conservation Pledge", "Environment", 102.5, [2023, 2028], ["Alaska Conservation Fdn", "Christensen Fund", "Decolonizing Wealth Project", "Moore", "Grousemont", "J.M. Kaplan Fund", "Packard", "Resources Legacy Fund", "Re:wild", "Walton Family", "Water Foundation", "Wilburforce", "Hewlett", "Wyss"]],
+  ["National Dance Project", "Arts", 38.5, [1999, 2026], ["Mellon", "Aliad Fund"]],
+  ["Opt-in for Families", "Child Well-being", 33, [2024, 2027], ["Duke Endowment", "Aviv Foundation"]],
+  ["Artist Relief", "Arts", 25, [2020, 2021], ["Mellon", "Rauschenberg", "Knight", "Open Society"]],
+  ["Fund to Retain Clinical Scientists", "Medical Research", 12.1, [2021, 2021], ["American Heart Assn", "Burroughs Wellcome", "Templeton", "Rita Allen", "Walder"]],
+  ["Artists Make Technology", "Arts", 11, [2026, 2028], ["Mozilla", "Hewlett", "Ford", "MacArthur", "Omidyar Network"]],
+  ["Institutional Challenge Grants", "Child Well-being", 7.8, [2023, 2026], ["W.T. Grant", "Spencer", "Bezos Family", "Annie E. Casey"]],
+  ["Tech Infrastructure Grants", "Arts", 4, [2026, 2030], ["Ford"]],
+  ["Performing Artist Recovery Fund", "Arts", 3, [2021, 2021], ["NY Community Trust"]],
+  ["Land and Climate Program", "Environment", 1.2, [2024, 2024], ["J.M. Kaplan Fund", "Jane's Trust", "Merck Family Fdn", "Oregon Community Fdn", "Volgenau", "William Penn"]],
+  ["Mosaic Network and Fund", "Arts", null, [2018, 2026], ["Mellon", "Ford", "Bloomberg", "Rockefeller Brothers", "Surdna", "Stavros Niarchos", "Jerome", "Mertz Gilmore", "Altman", "Howard Gilman", "NY Community Trust"]],
+  ["Collective to Strengthen Pathways for Health Research", "Medical Research", null, [2025, 2026], ["American Cancer Society", "American Heart Assn", "Burroughs Wellcome", "Dana Foundation", "Donaghue", "Prebys", "Robertson", "Susan G. Komen"]],
 ].map(([name, area, pool, years, funders]) => ({ name, area, pool, years, funders }));
 const ICG_ROUNDS = [2023, 2025, 2026];
-
-// Endowment / total assets, $ billions. s = sourced (Wikipedia list, rounded, end-2024), a = approximate, unverified
-const ENDOW = {
-  "Doris Duke Foundation": [2.0, "a"],
-  "Ford": [13.7, "s"], "Mellon": [6.2, "s"], "MacArthur": [6.0, "s"], "Hewlett": [13.3, "s"], "Packard": [6.3, "s"],
-  "Moore": [9.5, "s"], "Open Society": [19.6, "s"], "Duke Endowment": [3.4, "s"], "Stavros Niarchos": [12.0, "s"], "Bloomberg": [4.2, "s"],
-  "Walton Family": [6.0, "a"], "Lumina": [1.5, "a"], "Knight": [2.5, "a"], "Templeton": [3.5, "a"], "Burroughs Wellcome": [1.3, "a"],
-  "Rockefeller Brothers": [1.2, "a"], "Surdna": [1.2, "a"], "Annie E. Casey": [3.5, "a"], "Oregon Community Fdn": [3.0, "a"],
-  "NY Community Trust": [1.3, "a"], "Spencer": [0.6, "a"], "W.T. Grant": [0.4, "a"], "William Penn": [0.7, "a"],
+// Verification per program: conf 1-4, display labels, note on what was checked (checked 26 Nov 2026)
+const META = {
+"Humanity AI": {
+"conf": 4,
+"yrsLabel": "Oct 2025, five years",
+"poolLabel": "$500M over five years",
+"note": "MacArthur press release (Oct 14, 2025) names all 10 partners, including DDF, and the $500M five-year total."
+},
+"Tribal Nations Conservation Pledge": {
+"conf": 2,
+"yrsLabel": "Announced Mar 2023 (five years, per news reports)",
+"poolLabel": "$102.5M in commitments",
+"note": "DDF release (Mar 21, 2023) confirms $102.5M and DDF's $32M share, but names only Native Americans in Philanthropy, the Biodiversity Funders Group and '14 other philanthropies'. The 14 funder names shown here come from news reports (Chronicle of Philanthropy, Mongabay), not a primary source.",
+"ddf": "About $32M (about one third), per DDF's release"
+},
+"National Dance Project": {
+"conf": 4,
+"yrsLabel": "DDF since 1999 (NDP since 1996)",
+"poolLabel": "More than $38.5M invested since 1996 (all funders, cumulative)",
+"note": "NEFA's NDP page names DDF and Mellon as lead funders and the Aliad Fund for special initiatives, says DDF has funded it since 1999, and gives the $38.5M total. The final Production Grant cohort was awarded Sept 2026. NEFA says it is evolving its national programs after that cohort, so funders may change."
+},
+"Opt-in for Families": {
+"conf": 3,
+"yrsLabel": "Mar 2024, three years",
+"poolLabel": "$33M over three years",
+"note": "DDF release (Mar 11, 2024) gives $33M over three years from a coalition 'including' DDF, The Duke Endowment and the Aviv Foundation, so the list may be incomplete. It also says each of 4 sites gets about $9M (about $36M), which doesn't match $33M."
+},
+"Artist Relief": {
+"conf": 4,
+"yrsLabel": "Apr 2020 – Jun 2021",
+"poolLabel": "$25M raised",
+"note": "Artist Relief's About page lists DDF (as Doris Duke Charitable Foundation, its name before 2023) among funders matching Mellon's $5M seed, and gives $25M raised and 13 cycles from Apr 2020 to Jun 2021.",
+"ddf": "not published (DDF's own grant list shows $500K to United States Artists for Artist Relief, Apr 2020)"
+},
+"Fund to Retain Clinical Scientists": {
+"conf": 4,
+"yrsLabel": "Announced Nov 2021 (grant period not stated)",
+"poolLabel": "$12.1M (22 medical schools × $550K)",
+"note": "DDF press release (Nov 17, 2021) names all 5 partners and $12.1M to 22 schools. It says $500K per grant in one place and $550K in another; $550K × 22 = $12.1M."
+},
+"Artists Make Technology": {
+"conf": 3,
+"yrsLabel": "Jan 2026, three-year goal",
+"poolLabel": "$11M goal; $6.5M committed at launch",
+"note": "DDF release (Jan 7, 2026) names Mozilla, Hewlett, DDF and Ford as committing $6.5M toward an $11M three-year goal. MacArthur and Omidyar Network are not in the release; they come from a later Inside Philanthropy report (secondary).",
+"ddf": "$6M for the AMT Lab (part of the $11M)"
+},
+"Institutional Challenge Grants": {
+"conf": 4,
+"yrsLabel": "Rounds in 2023, 2025, 2026",
+"poolLabel": "About $2.6M per round (about $7.8M over 3 rounds)",
+"note": "W.T. Grant Foundation releases: 2023 round (Jun 2023) with Spencer, DDF and Bezos Family, nearly $2.6M; 2025 round (Jun 30, 2025) with the same partners, $2.6M; 2026 round (May 6, 2026) with Annie E. Casey, Bezos Family, DDF and Spencer, $2.6M. Not every grant in a round is co-funded by DDF."
+},
+"Tech Infrastructure Grants": {
+"conf": 4,
+"yrsLabel": "Jul 2026, five years",
+"poolLabel": "More than $4M over five years",
+"note": "DDF release (Jul 6, 2026) says DDF announced the grants in partnership with the Ford Foundation, totaling more than $4M over five years. It says 'five grants' but lists six grantees."
+},
+"Performing Artist Recovery Fund": {
+"conf": 3,
+"yrsLabel": "Oct 2021",
+"poolLabel": "$3M (300 artists × $10,000)",
+"note": "DDF release (Oct 12, 2021): $3M to 300 artists at $10,000 each, through a fund DDF created at The New York Community Trust. NYCT administers it; the release doesn't say NYCT added its own money, so this may be DDF-only."
+},
+"Land and Climate Program": {
+"conf": 3,
+"yrsLabel": "DDF grant 2024 (program launch year not stated)",
+"poolLabel": "More than $1.2M over three years",
+"note": "Land Trust Alliance release names DDF and the 6 other funders and says more than $1.2M was awarded in the three years since launch. The release is undated, so the launch year is unknown; only DDF's 2024 grant is dated.",
+"ddf": "$250,000 (2024 grant, DDF grants database)"
+},
+"Mosaic Network and Fund": {
+"conf": 4,
+"yrsLabel": "2018 – present (paused)",
+"poolLabel": "Not published",
+"note": "NYCT's Mosaic page: established 2018, 27 donors (all 11 shown here are on its list, plus DDF), activities 'currently on pause' while it prepares to operate independently. Pool size not published."
+},
+"Collective to Strengthen Pathways for Health Research": {
+"conf": 4,
+"yrsLabel": "2025 – present",
+"poolLabel": "Not published",
+"note": "DDF project page names DDF and all 8 partners 'and additional philanthropic partners' as the Collective, and says it held 18 conversations in 2025. No dollar figure is published."
+}
 };
+// Total assets, $ billions: [value, fiscal year, conf 1-4, source label, source URL]
+const ENDOW = {
+"Doris Duke Foundation": [
+2.22,
+"FY2024",
+4,
+"990-PF",
+"https://projects.propublica.org/nonprofits/organizations/823691183"
+],
+"Ford": [
+17.48,
+"FY2024",
+4,
+"990-PF",
+"https://projects.propublica.org/nonprofits/organizations/131684331"
+],
+"Mellon": [
+7.82,
+"FY2024",
+4,
+"990-PF",
+"https://projects.propublica.org/nonprofits/organizations/131879954"
+],
+"Packard": [
+8.55,
+"FY2024",
+4,
+"990-PF",
+"https://projects.propublica.org/nonprofits/organizations/942278431"
+],
+"Open Society": [
+10.84,
+"FY2024 (Foundation to Promote Open Society)",
+3,
+"990-PF",
+"https://projects.propublica.org/nonprofits/organizations/263753801"
+],
+"Lumina": [
+1.54,
+"FY2024",
+4,
+"990-PF",
+"https://projects.propublica.org/nonprofits/organizations/351813228"
+],
+"Knight": [
+2.53,
+"FY2024",
+4,
+"990-PF",
+"https://projects.propublica.org/nonprofits/organizations/650464177"
+],
+"Burroughs Wellcome": [
+0.886,
+"FY Aug 2025",
+4,
+"990-PF",
+"https://projects.propublica.org/nonprofits/organizations/237225395"
+],
+"Rockefeller Brothers": [
+1.42,
+"FY2024",
+4,
+"990-PF",
+"https://projects.propublica.org/nonprofits/organizations/131760106"
+],
+"Surdna": [
+1.23,
+"FY Jun 2025",
+4,
+"990-PF",
+"https://projects.propublica.org/nonprofits/organizations/136108163"
+],
+"Annie E. Casey": [
+2.29,
+"FY2024",
+4,
+"990-PF",
+"https://projects.propublica.org/nonprofits/organizations/521951681"
+],
+"Oregon Community Fdn": [
+3.32,
+"FY2024",
+4,
+"990",
+"https://projects.propublica.org/nonprofits/organizations/237315673"
+],
+"NY Community Trust": [
+3.52,
+"FY2024",
+4,
+"990",
+"https://projects.propublica.org/nonprofits/organizations/133062214"
+],
+"Spencer": [
+0.665,
+"FY Mar 2025",
+4,
+"990-PF",
+"https://projects.propublica.org/nonprofits/organizations/366078558"
+],
+"W.T. Grant": [
+0.42,
+"FY2024",
+4,
+"990-PF",
+"https://projects.propublica.org/nonprofits/organizations/131624021"
+],
+"William Penn": [
+3.44,
+"FY2024",
+4,
+"990-PF",
+"https://projects.propublica.org/nonprofits/organizations/231503488"
+],
+"MacArthur": [
+9.31,
+"FY2024",
+4,
+"990-PF",
+"https://projects.propublica.org/nonprofits/organizations/237093598"
+],
+"Hewlett": [
+14.2,
+"FY2024",
+4,
+"990-PF",
+"https://projects.propublica.org/nonprofits/organizations/941655673"
+],
+"Moore": [
+11.52,
+"FY2024",
+4,
+"990-PF",
+"https://projects.propublica.org/nonprofits/organizations/943397785"
+],
+"Duke Endowment": [
+3.57,
+"FY2024",
+4,
+"990-PF",
+"https://projects.propublica.org/nonprofits/organizations/560529965"
+],
+"Walton Family": [
+6.14,
+"FY2024",
+4,
+"990-PF",
+"https://projects.propublica.org/nonprofits/organizations/133441466"
+],
+"Bloomberg": [
+12.12,
+"FY2024 (Bloomberg Family Foundation, the main Bloomberg Philanthropies foundation)",
+3,
+"990-PF",
+"https://projects.propublica.org/nonprofits/organizations/205602483"
+],
+"Templeton": [
+3.6,
+"FY2024",
+4,
+"990-PF",
+"https://projects.propublica.org/nonprofits/organizations/621322826"
+],
+"Stavros Niarchos": [
+12.0,
+"end-2024 estimate (no US 990)",
+2,
+"Wikipedia",
+"https://en.wikipedia.org/wiki/List_of_wealthiest_charitable_foundations"
+]
+};
+
 const FULL = {
   "Ford": "Ford Foundation", "Mellon": "Mellon Foundation", "MacArthur": "John D. and Catherine T. MacArthur Foundation",
   "Hewlett": "William and Flora Hewlett Foundation", "Packard": "David and Lucile Packard Foundation", "Moore": "Gordon and Betty Moore Foundation",
@@ -219,7 +473,7 @@ const WEB = {
   "American Cancer Society": "https://www.cancer.org", "Susan G. Komen": "https://www.komen.org", "Dana Foundation": "https://dana.org", "Rita Allen": "https://ritaallen.org",
   "Christensen Fund": "https://www.christensenfund.org", "J.M. Kaplan Fund": "https://www.jmkfund.org", "Wilburforce": "https://www.wilburforce.org", "Wyss": "https://www.wyssfoundation.org",
   "Re:wild": "https://www.rewild.org", "Resources Legacy Fund": "https://resourceslegacyfund.org", "Alaska Conservation Fdn": "https://alaskaconservation.org",
-  "Jerome": "https://www.jeromefdn.org", "Mertz Gilmore": "https://www.mertzgilmore.org", "Howard Gilman": "https://www.gilmanfoundation.org", "Donaghue": "https://donaghue.org",
+  "Jerome": "https://www.jeromefdn.org", "Mertz Gilmore": "https://www.mertzgilmore.org", "Donaghue": "https://donaghue.org",
   "Bezos Family": "https://www.bezosfamilyfoundation.org", "Merck Family Fdn": "https://www.merckff.org", "Doris Duke Foundation": "https://www.dorisduke.org",
 };
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -291,7 +545,7 @@ function build(progs) {
     for (let i = 0; i < p.funders.length; i++) for (let j = i + 1; j < p.funders.length; j++)
       add(p.funders[i], p.funders[j], "co", p.pool, p.pool != null, 2.4 / (p.funders.length - 1), p);
   });
-  nodes.forEach(n => { const e = ENDOW[n.id]; n.endow = e ? e[0] : null; n.esrc = e ? e[1] : null;
+  nodes.forEach(n => { const e = ENDOW[n.id]; n.endow = e ? e[0] : null; n.efy = e ? e[1] : null; n.econf = e ? e[2] : null; n.elab = e ? e[3] : null; n.eurl = e ? e[4] : null;
     n.color = n.id === DDF ? "var(--ddf)" : n.areas.size === 1 ? `var(${areaVar([...n.areas][0])})` : "var(--multi)"; });
   return { nodes: [...nodes.values()], links: [...links.values()] };
 }
@@ -343,7 +597,7 @@ function render() {
     .text(d => d.id === DDF ? "Doris Duke" : d.id);
 
   const plabel = gProg.selectAll("text").data(progs.filter(p => p.funders.length > 1), d => d.name).join("text")
-    .attr("class", "prog-label").attr("text-anchor", "middle").text(d => d.name);
+    .attr("class", "prog-label").attr("text-anchor", "middle").text(d => d.name.startsWith("Collective") ? "Health Research Collective" : d.name);
 
   if (sim) sim.stop();
   sim = d3.forceSimulation(nodes)
@@ -392,7 +646,7 @@ function showLinkTip(e, d) {
   const kind = d.kind === "spoke" ? "Co-funded with DDF" : "Co-funded the same program";
   const total = d.progs.some(p => p.pool != null) ? fmtM(Math.round(d.progs.reduce((s, p) => s + (p.pool || 0), 0) * 10) / 10) : "not published";
   tip.innerHTML = `<b>${nm(d.source)} ↔ ${nm(d.target)}</b><br><span class="k">${kind}</span><br>` +
-    d.progs.map(p => `· ${p.name} <span class="k">(${p.area}, pool ${fmtM(p.pool)})</span>`).join("<br>") +
+    d.progs.map(p => `· ${p.name} <span class="k">(${p.area}, pool ${poolTxt(p)})</span> ${badge(META[p.name].conf)}`).join("<br>") +
     (d.progs.length > 1 ? `<br><span class="k">Combined pool:</span> ${total}` : "");
   placeTip(e);
 }
@@ -407,36 +661,46 @@ function placeTip(e) {
 function unfocus(link, node, label) { node.classed("faded", false); label.classed("faded", false).classed("on", false); link.classed("faded", false).classed("hl-co", false); }
 
 const SRC = {
-  "Humanity AI": "https://www.macfound.org/press/press-releases/humanity-ai-commits-500-million-to-build-a-people-centered-future-for-ai",
-  "Tribal Nations Conservation Pledge": "https://www.dorisduke.org/news/doris-duke-foundation-and-partners-announce-over-100-million-for-tribal-led-conservation",
-  "National Dance Project": "https://www.nefa.org/grants/grant-programs/national-dance-project",
-  "Opt-in for Families": "https://dorisduke.org/news/doris-duke-foundation-launches-new-opt-in-for-families-initiative-to-refocus-the-child-welfare-system-on-prevention",
-  "Artist Relief": "https://www.artistrelief.org/about",
-  "Fund to Retain Clinical Scientists": "https://www.dorisduke.org/siteassets/news--insights/2021-press-releases/11.16.21-covid19-frcs-press-release.pdf",
-  "Artists Make Technology": "https://www.dorisduke.org/news/doris-duke-foundation-and-mozilla-foundation-announce-usd6-5m-commitment-to-ensure-performing-artists-are-at-the-center-of-technology-innovation",
-  "Institutional Challenge Grants": "https://wtgrantfoundation.org/announcing-the-2025-institutional-challenge-grantees",
-  "Tech Infrastructure Grants": "https://www.dorisduke.org/news/doris-duke-foundation-announces-new-grants-supporting-technology-infrastructure-in-the-performing-arts",
-  "Performing Artist Recovery Fund": "https://dorisduke.org/news--insights/articles/partnership-between-the-doris-duke-charitable-foundation-and-the-new-york-community-trust-awards---$3-million-to-performing-artists-in-need",
-  "Land and Climate Program": "https://landtrustalliance.org/newsroom/press-releases/land-trust-alliance-and-open-space-institute-award-grants-to-accelerate-climate-planning-nation-wide",
-  "Mosaic Network and Fund": "https://thenytrust.org/collaborative-fund/mosaic-network-and-fund",
-  "Collective for Health Research": "https://www.dorisduke.org/grants/projects/a-new-blueprint-for-progress",
+"Humanity AI": "https://www.macfound.org/press/press-releases/humanity-ai-commits-500-million-to-build-a-people-centered-future-for-ai",
+"Tribal Nations Conservation Pledge": "https://www.dorisduke.org/news/doris-duke-foundation-and-partners-announce-over-100-million-for-tribal-led-conservation",
+"National Dance Project": "https://www.nefa.org/grants/grant-programs/national-dance-project",
+"Opt-in for Families": "https://dorisduke.org/news/doris-duke-foundation-launches-new-opt-in-for-families-initiative-to-refocus-the-child-welfare-system-on-prevention",
+"Artist Relief": "https://www.artistrelief.org/about",
+"Fund to Retain Clinical Scientists": "https://www.dorisduke.org/siteassets/news--insights/2021-press-releases/11.16.21-covid19-frcs-press-release.pdf",
+"Artists Make Technology": "https://www.dorisduke.org/news/doris-duke-foundation-and-mozilla-foundation-announce-usd6-5m-commitment-to-ensure-performing-artists-are-at-the-center-of-technology-innovation",
+"Institutional Challenge Grants": "https://wtgrantfoundation.org/announcing-the-2025-institutional-challenge-grantees",
+"Tech Infrastructure Grants": "https://www.dorisduke.org/news/doris-duke-foundation-announces-new-grants-supporting-technology-infrastructure-in-the-performing-arts",
+"Performing Artist Recovery Fund": "https://dorisduke.org/news--insights/articles/partnership-between-the-doris-duke-charitable-foundation-and-the-new-york-community-trust-awards---$3-million-to-performing-artists-in-need",
+"Land and Climate Program": "https://landtrustalliance.org/newsroom/press-releases/land-trust-alliance-and-open-space-institute-award-grants-to-accelerate-climate-planning-nation-wide",
+"Mosaic Network and Fund": "https://thenytrust.org/collaborative-fund/mosaic-network-and-fund",
+"Collective to Strengthen Pathways for Health Research": "https://www.dorisduke.org/grants/projects/a-new-blueprint-for-progress"
 };
 let pinned = null;
-const yrs = p => p.name === "Institutional Challenge Grants" ? ICG_ROUNDS.join(", ") : (p.years[0] === p.years[1] ? p.years[0] : `${p.years[0]}–${p.years[1]}`);
+const esc0 = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+const CONF_TXT = { 4: "Verified: matches a primary source read on 26 Nov 2026", 3: "Mostly verified: primary source, with a small gap noted", 2: "Partly verified: secondary source or inference", 1: "Unverified" };
+const badge = c => c ? `<span class="conf c${c}" title="${CONF_TXT[c]}">${"●".repeat(c)}${"○".repeat(4 - c)} ${c}/4</span>` : "";
+const endowHtml = n => n.endow ? `${fmtB(n.endow)} <span class="k">total assets, ${n.efy}</span> ${badge(n.econf)}` : `<span class="k">Not available</span>`;
+const poolTxt = p => (META[p.name] && META[p.name].poolLabel) || fmtM(p.pool);
+const ddfTxt = p => (META[p.name] && META[p.name].ddf) || "not published";
+const progDetail = (p, exclude) => `<span class="k">${p.area} · ${yrs(p)}</span><br><span class="k">Pool:</span> ${poolTxt(p)}<br><span class="k">DDF share:</span> ${ddfTxt(p)}` +
+  (exclude !== undefined ? `<br><span class="k">With:</span> ${esc0(p.funders.filter(f => f !== exclude).join(", ") || "DDF only")}` : "") +
+  `<br>${badge(META[p.name].conf)} <a href="${SRC[p.name]}" target="_blank" rel="noopener">Source</a><div class="vnote">${META[p.name].note}</div>`;
+const yrs = p => (META[p.name] && META[p.name].yrsLabel) || (p.years[0] === p.years[1] ? p.years[0] : `${p.years[0]}–${p.years[1]}`);
 function showTip(e, d, pin = false) {
   if (pinned && !pin) return;
   const name = d.id === DDF ? DDF : (FULL[d.id] || d.id);
-  const endow = d.endow ? `${fmtB(d.endow)} <span class="k">(${d.esrc === "s" ? "sourced, end-2024" : "approx., unverified"})</span>` : `<span class="k">Not available</span>`;
+  const endow = endowHtml(d);
   let body;
   if (!pin) {
-    body = `<div class="tip-head"><b>${name}</b>${d.id !== DDF ? '<span class="more">Click for more info</span>' : ""}</div><span class="k">Endowment:</span> ${endow}`;
-    if (d.id !== DDF) body += `<br><span class="k">Programs with DDF:</span><br>` + d.progs.map(p => `· ${p.name} <span class="k">(${p.area}, pool ${fmtM(p.pool)})</span>`).join("<br>");
+    body = `<div class="tip-head"><b>${name}</b>${d.id !== DDF ? '<span class="more">Click for more info</span>' : ""}</div><span class="k">Total assets:</span> ${endow}`;
+    if (d.id !== DDF) body += `<br><span class="k">Programs with DDF:</span><br>` + d.progs.map(p => `· ${p.name} <span class="k">(${p.area}, pool ${poolTxt(p)})</span> ${badge(META[p.name].conf)}`).join("<br>");
     else body += `<br><span class="k">Hub of all programs shown</span>`;
   } else {
     const partners = new Set(); d.progs.forEach(p => p.funders.forEach(f => { if (f !== d.id) partners.add(f); }));
     body = `<div class="tip-head"><b>${name}</b><button class="tip-close" id="tip-close" aria-label="Close">×</button></div>` +
-      `<span class="k">Endowment:</span> ${endow}<br><span class="k">Shares ${d.progs.length} program${d.progs.length > 1 ? "s" : ""} with DDF and ${partners.size} other funder${partners.size === 1 ? "" : "s"}</span>` +
-      d.progs.map(p => `<div class="tip-prog"><b>${p.name}</b><br><span class="k">${p.area} · ${yrs(p)} · pool ${fmtM(p.pool)}</span><br><span class="k">With:</span> ${p.funders.filter(f => f !== d.id).join(", ") || "DDF only"}<br><a href="${SRC[p.name]}" target="_blank" rel="noopener">Source</a></div>`).join("");
+      `<span class="k">Total assets:</span> ${endow}<br><span class="k">Shares ${d.progs.length} program${d.progs.length > 1 ? "s" : ""} with DDF and ${partners.size} other funder${partners.size === 1 ? "" : "s"}</span>` +
+      d.progs.map(p => `<div class="tip-prog"><b>${p.name}</b><br>${progDetail(p, d.id)}</div>`).join("");
   }
   tip.innerHTML = body; tip.classList.toggle("pinned", pin);
   placeTip(e);
@@ -488,27 +752,27 @@ function refreshSide() {
   } else if (sideView.kind === "programs") {
     clearHighlight();
     html = `<div class="side-top"><h2>${progs.length} programs</h2>${close}</div><ul>` +
-      progs.map(p => `<li><button data-p="${esc(p.name)}"><span><span class="dot" style="background:var(${areaVar(p.area)})"></span>${esc(p.name)}</span><span class="n">${fmtM(p.pool).replace("not published", "—")}</span></button></li>`).join("") + `</ul>`;
+      progs.map(p => `<li><button data-p="${esc(p.name)}"><span><span class="dot" style="background:var(${areaVar(p.area)})"></span>${esc(p.name)}</span><span class="n">${fmtM(p.pool).replace("not published", "—")} ${badge(META[p.name].conf)}</span></button></li>`).join("") + `</ul>`;
   } else if (sideView.kind === "funder") {
     const n = current.nodes.find(x => x.id === sideView.id);
     if (!n) { sideView = { kind: "funders" }; return refreshSide(); }
     const ids = new Set([DDF, n.id]); n.progs.forEach(p => p.funders.forEach(f => ids.add(f))); highlight(ids, n.id);
-    const endow = n.endow ? `${fmtB(n.endow)} <span class="k">(${n.esrc === "s" ? "sourced, end-2024" : "approx., unverified"})</span>` : `<span class="k">Not available</span>`;
+    const endow = endowHtml(n) + (n.eurl ? ` <a href="${n.eurl}" target="_blank" rel="noopener">${n.elab}</a>` : "");
     const web = WEB[n.id] ? `<a class="webl" href="${WEB[n.id]}" target="_blank" rel="noopener">Website ↗</a>` : "";
     html = `<div class="side-top"><button class="back" id="side-back">← Back to funders list</button>${close}</div>` +
-      `<h2>${esc(FULL[n.id] || n.id)}</h2><div><span class="k">Endowment:</span> ${endow}${web}</div>` +
+      `<h2>${esc(FULL[n.id] || n.id)}</h2><div><span class="k">Total assets:</span> ${endow}${web}</div>` +
       `<div><b>${n.progs.length}</b> <span class="k">program${n.progs.length > 1 ? "s" : ""} with DDF</span></div>` +
-      n.progs.map(p => `<div class="blk"><button class="plink" data-p="${esc(p.name)}">${esc(p.name)}</button><br><span class="k">${p.area} · ${yrs(p)} · pool ${fmtM(p.pool)}</span><br><span class="k">With:</span> ${esc(p.funders.filter(f => f !== n.id).join(", ") || "DDF only")}<br><a href="${SRC[p.name]}" target="_blank" rel="noopener">Source</a></div>`).join("");
+      n.progs.map(p => `<div class="blk"><button class="plink" data-p="${esc(p.name)}">${esc(p.name)}</button><br>${progDetail(p, n.id)}</div>`).join("");
   } else if (sideView.kind === "program") {
     const p = current.progs.find(x => x.name === sideView.id);
     if (!p) { sideView = { kind: "programs" }; return refreshSide(); }
     highlight(new Set([DDF, ...p.funders]));
     progSel.value = p.name;
     html = `<div class="side-top"><button class="back" id="side-back">← Back to programs list</button>${close}</div>` +
-      `<h2>${esc(p.name)}</h2><div class="k">${p.area} · ${yrs(p)} · pool ${fmtM(p.pool)}</div>` +
+      `<h2>${esc(p.name)}</h2><div>${progDetail(p)}</div>` +
       `<div class="blk"><span class="k">Funders with DDF (${p.funders.length})</span><ul>` +
       p.funders.slice().sort().map(f => `<li><button data-f="${esc(f)}"><span>${esc(f)}</span></button></li>`).join("") + `</ul></div>` +
-      `<div class="blk"><a href="${SRC[p.name]}" target="_blank" rel="noopener">Source</a></div>`;
+      "";
   }
   side.innerHTML = html;
   side.querySelector("#side-close")?.addEventListener("click", closeSide);
