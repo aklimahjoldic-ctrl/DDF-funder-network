@@ -99,6 +99,15 @@ line.hl-co { stroke: var(--spoke); stroke-opacity: 0.35; stroke-width: 1.2px; }
 .legend .row { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
 .notes { font-size: 12px; color: var(--muted); line-height: 1.55; }
+.about summary { cursor: pointer; font-size: 12px; color: var(--muted); width: fit-content; }
+.about summary:hover { color: var(--fg); }
+.about[open] summary { margin-bottom: 6px; }
+.reset { font: inherit; font-size: 12.5px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--fg); cursor: pointer; }
+.reset:focus-visible, #progsel:focus-visible { outline: 2px solid var(--arts); outline-offset: 2px; }
+#progsel { max-width: 240px; }
+.side .plink { all: unset; cursor: pointer; font-weight: 600; color: var(--fg); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+.side .plink:hover, .side .plink:focus-visible { text-decoration-color: var(--fg); }
+.side .webl { margin-left: 8px; }
 .notes p { margin: 0 0 6px; }
 .count { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; margin-left: auto; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -117,6 +126,9 @@ line.hl-co { stroke: var(--spoke); stroke-opacity: 0.35; stroke-width: 1.2px; }
     <button class="play" id="play" type="button">▶ Play</button>
     <span class="lab" id="proglab">DDF program</span>
     <div class="chips" id="chips" aria-labelledby="proglab"></div>
+    <label class="lab" for="progsel">Program</label>
+    <select id="progsel"><option value="">All programs</option></select>
+    <button class="reset" id="reset" type="button">Reset</button>
   </div>
 
   <div class="main" id="main">
@@ -134,11 +146,13 @@ line.hl-co { stroke: var(--spoke); stroke-opacity: 0.35; stroke-width: 1.2px; }
 
   <div class="legend" id="legend"></div>
 
-  <div class="notes">
+  <details class="about notes" id="about">
+    <summary>About this data</summary>
     <p><b>Programs.</b> 13 programs from the research spreadsheet. Colors follow DDF's program names on dorisduke.org (Arts, Environment, Medical Research, Child Well-being, Building Bridges). Humanity AI is not housed in one DDF program, so it is shown as "Other". No pooled program was found for Building Bridges. Gray dots are funders that share programs across more than one DDF program.</p>
     <p><b>Endowments.</b> Figures marked "sourced" come from Wikipedia's list of wealthiest charitable foundations (rounded estimates, end of 2024). Figures marked "approx." are approximate recent total assets from public reports and were not checked line by line. Funders with no reliable figure (public charities, LLCs, smaller family foundations) are drawn as small dashed rings.</p>
     <p><b>Line width.</b> DDF rarely publishes its own share, so lines use each program's total pool (log scale). Dashed lines mean the pool size is not published. The Mosaic Fund shows 11 of its 27 donors.</p>
-  </div>
+    <p><b>Filled and hollow dots.</b> Each dot represents a funder. A filled dot means a public endowment figure was found, and its size shows that endowment. A hollow dashed dot means no reliable endowment figure was found, so it is drawn at a fixed size.</p>
+  </details>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
@@ -190,9 +204,24 @@ const FULL = {
   "William Penn": "William Penn Foundation", "Kapor": "Kapor Foundation", "Mozilla": "Mozilla Foundation", "Rauschenberg": "Robert Rauschenberg Foundation",
   "American Heart Assn": "American Heart Association", "Rita Allen": "Rita Allen Foundation", "Walder": "Walder Foundation",
   "Bezos Family": "Bezos Family Foundation", "Aviv Foundation": "Aviv Foundation", "Merck Family Fdn": "Merck Family Fund", "Alaska Conservation Fdn": "Alaska Conservation Foundation",
-  "Aliad Fund": "Aliad Fund at the Boston Foundation", "Prebys": "Conrad Prebys Foundation", "Donaghue": "Patrick and Catherine Weldon Donaghue Medical Research Foundation",
+  "Aliad Fund": "Aliad Fund at the Boston Foundation", "Dana Foundation": "Dana Foundation", "Susan G. Komen": "Susan G. Komen",
+  "American Cancer Society": "American Cancer Society", "Robertson": "Robertson Foundation", "Siegel Family Endowment": "Siegel Family Endowment", "Prebys": "Conrad Prebys Foundation", "Donaghue": "Patrick and Catherine Weldon Donaghue Medical Research Foundation",
 };
 
+const WEB = {
+  "Ford": "https://www.fordfoundation.org", "Mellon": "https://www.mellon.org", "MacArthur": "https://www.macfound.org", "Hewlett": "https://hewlett.org",
+  "Packard": "https://www.packard.org", "Moore": "https://www.moore.org", "Open Society": "https://www.opensocietyfoundations.org", "Duke Endowment": "https://www.dukeendowment.org",
+  "Stavros Niarchos": "https://www.snf.org", "Bloomberg": "https://www.bloomberg.org", "Walton Family": "https://www.waltonfamilyfoundation.org", "Lumina": "https://www.luminafoundation.org",
+  "Knight": "https://knightfoundation.org", "Templeton": "https://www.templeton.org", "Burroughs Wellcome": "https://www.bwfund.org", "Rockefeller Brothers": "https://www.rbf.org",
+  "Surdna": "https://surdna.org", "Annie E. Casey": "https://www.aecf.org", "Oregon Community Fdn": "https://oregoncf.org", "NY Community Trust": "https://www.thenytrust.org",
+  "Spencer": "https://www.spencer.org", "W.T. Grant": "https://wtgrantfoundation.org", "William Penn": "https://williampennfoundation.org", "Kapor": "https://www.kaporfoundation.org",
+  "Mozilla": "https://foundation.mozilla.org", "Omidyar Network": "https://omidyar.com", "Rauschenberg": "https://www.rauschenbergfoundation.org", "American Heart Assn": "https://www.heart.org",
+  "American Cancer Society": "https://www.cancer.org", "Susan G. Komen": "https://www.komen.org", "Dana Foundation": "https://dana.org", "Rita Allen": "https://ritaallen.org",
+  "Christensen Fund": "https://www.christensenfund.org", "J.M. Kaplan Fund": "https://www.jmkfund.org", "Wilburforce": "https://www.wilburforce.org", "Wyss": "https://www.wyssfoundation.org",
+  "Re:wild": "https://www.rewild.org", "Resources Legacy Fund": "https://resourceslegacyfund.org", "Alaska Conservation Fdn": "https://alaskaconservation.org",
+  "Jerome": "https://www.jeromefdn.org", "Mertz Gilmore": "https://www.mertzgilmore.org", "Howard Gilman": "https://www.gilmanfoundation.org", "Donaghue": "https://donaghue.org",
+  "Bezos Family": "https://www.bezosfamilyfoundation.org", "Merck Family Fdn": "https://www.merckff.org", "Doris Duke Foundation": "https://www.dorisduke.org",
+};
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const areaVar = a => (AREAS.find(x => x.key === a) || {}).css;
 
@@ -232,7 +261,7 @@ svg.call(d3.zoom().scaleExtent([0.6, 4]).on("zoom", e => root.attr("transform", 
 const gLinks = root.append("g"), gHit = root.append("g"), gProg = root.append("g"), gNodes = root.append("g"), gLabels = root.append("g");
 const tip = document.getElementById("tip"), stage = document.getElementById("stage");
 const poolW = w => 0.8 + 2.2 * Math.log10((w ?? 0.5) + 1);
-const radius = n => n.id === DDF ? 30 : (n.endow ? 5 + 20 * Math.sqrt(n.endow / 20) : 6);
+const radius = n => n.id === DDF ? 30 : (n.endow ? 8 + 20 * Math.sqrt(n.endow / 20) : 9);
 const posCache = new Map();
 let sim;
 
@@ -284,10 +313,10 @@ function render() {
     .attr("stroke-width", d => d.kind === "spoke" ? poolW(d.w) : poolW(d.w) * 0.6)
     .attr("stroke-dasharray", d => d.known ? null : "3 3");
 
-  const hit = gHit.selectAll("line").data(sorted, d => d.kind + d.source + d.target).join("line").attr("class", "hit")
+  const hit = gHit.selectAll("line").data(sorted.filter(d => d.kind === "spoke"), d => d.kind + d.source + d.target).join("line").attr("class", "hit")
     .on("pointerenter", (e, d) => { link.classed("faded", l => l !== d).classed("hl", l => l === d); })
     .on("pointermove", (e, d) => { if (!pinned) showLinkTip(e, d); })
-    .on("pointerleave", () => { link.classed("faded", false).classed("hl", false); if (!pinned) tip.hidden = true; });
+    .on("pointerleave", () => { link.classed("hl", false); restore(); tip.hidden = true; });
 
   const node = gNodes.selectAll("circle").data(nodes, d => d.id).join("circle")
     .attr("r", radius)
@@ -298,8 +327,8 @@ function render() {
     .style("cursor", "pointer")
     .on("pointerenter", (e, d) => focus(d, link, node, label))
     .on("pointermove", (e, d) => showTip(e, d))
-    .on("pointerleave", () => { unfocus(link, node, label); if (!pinned) tip.hidden = true; })
-    .on("click", (e, d) => { e.stopPropagation(); if (d.id === DDF) return; pinned = null; pinned = d; showTip(e, d, true); })
+    .on("pointerleave", () => { restore(); tip.hidden = true; })
+    .on("click", (e, d) => { e.stopPropagation(); tip.hidden = true; if (d.id === DDF) return resetAll(); openSide({ kind: "funder", id: d.id }); })
     .call(d3.drag()
       .on("start", (e, d) => { if (!e.active) sim.alphaTarget(0.2).restart(); d.fx = d.x; d.fy = d.y; })
       .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
@@ -423,15 +452,25 @@ const btnF = document.getElementById("btn-funders"), btnP = document.getElementB
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const dotFor = n => n.areas.size === 1 ? `var(${areaVar([...n.areas][0])})` : "var(--multi)";
 function openSide(v) { sideView = v; side.hidden = false; mainEl.classList.add("open"); refreshSide(); }
-function closeSide() { sideView = null; side.hidden = true; mainEl.classList.remove("open"); btnF.setAttribute("aria-pressed", "false"); btnP.setAttribute("aria-pressed", "false"); clearHighlight(); }
+function closeSide() { if (typeof progSel !== "undefined") progSel.value = ""; sideView = null; side.hidden = true; mainEl.classList.remove("open"); btnF.setAttribute("aria-pressed", "false"); btnP.setAttribute("aria-pressed", "false"); clearHighlight(); }
 btnF.addEventListener("click", () => sideView && sideView.kind === "funders" ? closeSide() : openSide({ kind: "funders" }));
 btnP.addEventListener("click", () => sideView && sideView.kind === "programs" ? closeSide() : openSide({ kind: "programs" }));
-function highlight(ids) {
+let sel = null; // persistent highlight: { ids, focus }
+function paint(ids, focus) {
+  const shown = l => ids.has(l.source.id) && ids.has(l.target.id) && (!focus || l.source.id === focus || l.target.id === focus);
   gNodes.selectAll("circle").classed("faded", n => !ids.has(n.id));
-  gLabels.selectAll("text").classed("faded", n => !ids.has(n.id));
-  gLinks.selectAll("line").classed("faded", l => !(ids.has(l.source.id) && ids.has(l.target.id)));
+  gLabels.selectAll("text").classed("faded", n => !ids.has(n.id)).classed("on", n => n.id === focus);
+  gLinks.selectAll("line").classed("faded", l => !shown(l)).classed("hl-co", l => l.kind === "co" && shown(l));
 }
-function clearHighlight() { gNodes.selectAll("circle").classed("faded", false); gLabels.selectAll("text").classed("faded", false); gLinks.selectAll("line").classed("faded", false); }
+function highlight(ids, focus = null) { sel = { ids, focus }; paint(ids, focus); }
+function clearHighlight() {
+  sel = null;
+  gNodes.selectAll("circle").classed("faded", false);
+  gLabels.selectAll("text").classed("faded", false).classed("on", false);
+  gLinks.selectAll("line").classed("faded", false).classed("hl-co", false);
+}
+function restore() { if (sel) paint(sel.ids, sel.focus); else clearHighlight(); }
+function resetAll() { closeSide(); clearHighlight(); progSel.value = ""; tip.hidden = true; }
 function refreshSide() {
   if (!sideView) return;
   btnF.setAttribute("aria-pressed", ["funders", "funder"].includes(sideView.kind));
@@ -441,6 +480,7 @@ function refreshSide() {
   const progs = current.progs.slice().sort((a, b) => (b.pool ?? -1) - (a.pool ?? -1) || a.name.localeCompare(b.name));
   const close = `<button class="x" id="side-close" aria-label="Close panel">×</button>`;
   let html = "";
+  if (sideView.kind !== "program") progSel.value = "";
   if (sideView.kind === "funders") {
     clearHighlight();
     html = `<div class="side-top"><h2>${funders.length} funders</h2>${close}</div><ul>` +
@@ -452,16 +492,18 @@ function refreshSide() {
   } else if (sideView.kind === "funder") {
     const n = current.nodes.find(x => x.id === sideView.id);
     if (!n) { sideView = { kind: "funders" }; return refreshSide(); }
-    const ids = new Set([DDF, n.id]); n.progs.forEach(p => p.funders.forEach(f => ids.add(f))); highlight(ids);
+    const ids = new Set([DDF, n.id]); n.progs.forEach(p => p.funders.forEach(f => ids.add(f))); highlight(ids, n.id);
     const endow = n.endow ? `${fmtB(n.endow)} <span class="k">(${n.esrc === "s" ? "sourced, end-2024" : "approx., unverified"})</span>` : `<span class="k">Not available</span>`;
+    const web = WEB[n.id] ? `<a class="webl" href="${WEB[n.id]}" target="_blank" rel="noopener">Website ↗</a>` : "";
     html = `<div class="side-top"><button class="back" id="side-back">← Back to funders list</button>${close}</div>` +
-      `<h2>${esc(FULL[n.id] || n.id)}</h2><div><span class="k">Endowment:</span> ${endow}</div>` +
-      `<div class="k">${n.progs.length} program${n.progs.length > 1 ? "s" : ""} with DDF</div>` +
-      n.progs.map(p => `<div class="blk"><b>${esc(p.name)}</b><br><span class="k">${p.area} · ${yrs(p)} · pool ${fmtM(p.pool)}</span><br><span class="k">With:</span> ${esc(p.funders.filter(f => f !== n.id).join(", ") || "DDF only")}<br><a href="${SRC[p.name]}" target="_blank" rel="noopener">Source</a></div>`).join("");
+      `<h2>${esc(FULL[n.id] || n.id)}</h2><div><span class="k">Endowment:</span> ${endow}${web}</div>` +
+      `<div><b>${n.progs.length}</b> <span class="k">program${n.progs.length > 1 ? "s" : ""} with DDF</span></div>` +
+      n.progs.map(p => `<div class="blk"><button class="plink" data-p="${esc(p.name)}">${esc(p.name)}</button><br><span class="k">${p.area} · ${yrs(p)} · pool ${fmtM(p.pool)}</span><br><span class="k">With:</span> ${esc(p.funders.filter(f => f !== n.id).join(", ") || "DDF only")}<br><a href="${SRC[p.name]}" target="_blank" rel="noopener">Source</a></div>`).join("");
   } else if (sideView.kind === "program") {
     const p = current.progs.find(x => x.name === sideView.id);
     if (!p) { sideView = { kind: "programs" }; return refreshSide(); }
     highlight(new Set([DDF, ...p.funders]));
+    progSel.value = p.name;
     html = `<div class="side-top"><button class="back" id="side-back">← Back to programs list</button>${close}</div>` +
       `<h2>${esc(p.name)}</h2><div class="k">${p.area} · ${yrs(p)} · pool ${fmtM(p.pool)}</div>` +
       `<div class="blk"><span class="k">Funders with DDF (${p.funders.length})</span><ul>` +
@@ -488,6 +530,22 @@ playBtn.addEventListener("click", () => {
 });
 yearSel.addEventListener("change", () => { if (playTimer) stopPlay(); });
 
+const progSel = document.getElementById("progsel");
+PROGRAMS.slice().sort((a, b) => a.name.localeCompare(b.name)).forEach(p => progSel.insertAdjacentHTML("beforeend", `<option value="${esc(p.name)}">${esc(p.name)}</option>`));
+progSel.addEventListener("change", () => {
+  const name = progSel.value;
+  if (!name) return resetAll();
+  const p = PROGRAMS.find(x => x.name === name);
+  if (!current.progs.includes(p)) {
+    if (playTimer) stopPlay();
+    yearSel.value = "all";
+    active.add(p.area);
+    const chip = document.getElementById("chip-" + p.area.replace(/\W+/g, "-")); if (chip) chip.setAttribute("aria-pressed", "true");
+    render();
+  }
+  openSide({ kind: "program", id: name });
+});
+document.getElementById("reset").addEventListener("click", resetAll);
 svg.on("click", () => { if (pinned) unpin(); });
 document.addEventListener("keydown", e => { if (e.key === "Escape" && pinned) unpin(); });
 render();
