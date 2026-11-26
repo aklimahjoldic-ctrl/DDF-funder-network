@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 from matplotlib.lines import Line2D
 
-OUT = "/mnt/project-files/doris-duke/DDF_funder_network.png"
+OUT = "DDF_funder_network.png"
 DDF = "Doris Duke Foundation"
 
 # (program, DDF area, total pool $M or None if unpublished, partner funders)
